@@ -1,0 +1,19 @@
+plugins {
+    id 'groovy'
+    id 'java-gradle-plugin'
+}
+
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+}
+
+gradlePlugin {
+    plugins {
+        dockerDsl {
+            id = 'org.betterdevxp.dynamic-testsets'
+            implementationClass = 'org.betterdevxp.test.DynamicTestsetsPlugin'
+        }
+    }
+}
+
