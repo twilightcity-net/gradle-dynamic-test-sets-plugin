@@ -11,6 +11,6 @@ class DynamicTestSetsExtension {
     /**
      * These tasks will be automatically added as 'check' task dependencies
      */
-    List<String> compileTimeTestTaskNames = ["componentTest"]
+    List<String> commitStageTestTaskNames = ["componentTest"]
 
 }

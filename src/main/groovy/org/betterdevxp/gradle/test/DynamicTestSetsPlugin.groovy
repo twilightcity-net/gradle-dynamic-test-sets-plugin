@@ -2,10 +2,10 @@ package org.betterdevxp.gradle.test
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.testing.Test
-
 
 class DynamicTestSetsPlugin implements Plugin<Project> {
 
@@ -19,7 +19,7 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
 
         project.apply(plugin: "org.unbroken-dome.test-sets")
         configureDynamicTestSets()
-        configureTestTaskOrder()
+        configureTestTaskOrderAndCommitStageDependencies()
     }
 
     private List<String> configureDynamicTestSets() {
@@ -75,9 +75,6 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
                 imports libraries.sharedTest, libraries.mainTest
             }
         }
-        if (extension.compileTimeTestTaskNames.contains(testSetName)) {
-            project.tasks.check.dependsOn(testSetName)
-        }
     }
 
     private void extendTestLibraryFromMainConfigurations(String name) {
@@ -94,7 +91,7 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
         }
     }
 
-    private void configureTestTaskOrder() {
+    private void configureTestTaskOrderAndCommitStageDependencies() {
         project.tasks.withType(Test).configureEach { Test task ->
             int index = extension.standardTestTaskOrder.findIndexOf {it == task.name }
             if (index != 0) {
@@ -103,6 +100,15 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
                     project.tasks.findByName(it) != null
                 }.each {
                     task.mustRunAfter(it)
+                }
+            }
+        }
+
+        List<String> availableTestSetNames = getAvailableTestSetNames()
+        project.tasks.named("check").configure {Task task ->
+            extension.commitStageTestTaskNames.each {
+                if (availableTestSetNames.contains(it)) {
+                    task.dependsOn(it)
                 }
             }
         }
