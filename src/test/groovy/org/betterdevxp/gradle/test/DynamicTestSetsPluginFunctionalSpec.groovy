@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     // this dependency will be available to all test sets, so each test will have access to spock
-    mainTestApi 'org.spockframework:spock-core:1.3-groovy-2.5'
+    sharedTestApi 'org.spockframework:spock-core:1.3-groovy-2.5'
 }
 
 project.tasks.withType(Test) {
@@ -87,7 +87,14 @@ class SomeTest extends spock.lang.Specification {
     }
 
     def "should make classes from main source set available to test sets"() {
-        given: "class defined in the 'main' source set"
+        given:
+        buildFile << """
+        dependencies {
+            mainTestApi 'org.spockframework:spock-core:1.3-groovy-2.5'
+        }
+"""
+
+        and: "class defined in the 'main' source set"
         projectFile("src/main/java/Utils.java") << """
 public class Utils {
     public static void printLine(String line) {
@@ -164,6 +171,7 @@ apply plugin: "java-library"
 
 dependencies {
     api "com.google.guava:guava:26.0-jre"
+    mainTestApi 'org.spockframework:spock-core:1.3-groovy-2.5'
 }
 """
         projectFile("src/mainTest/groovy/MainTestUtils.groovy") << """
