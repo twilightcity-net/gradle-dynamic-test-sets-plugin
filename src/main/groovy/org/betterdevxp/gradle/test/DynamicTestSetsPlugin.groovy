@@ -99,23 +99,24 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
     }
 
     private void configureTestTaskOrderAndCommitStageDependencies() {
-        project.tasks.withType(Test).configureEach { Test task ->
-            int index = extension.standardTestTaskOrder.findIndexOf {it == task.name }
-            if (index != 0) {
-                int lastIndex = index > 0 ? index - 1 : index
-                extension.standardTestTaskOrder[0..lastIndex].findAll {
-                    project.tasks.findByName(it) != null
-                }.each {
-                    task.mustRunAfter(it)
+        project.afterEvaluate {
+            List<Task> standardTestTaskOrderTasks = extension.standardTestTaskOrder.collect {
+                project.tasks.findByName(it)
+            }.findAll {
+                it != null
+            }
+            for (int i = standardTestTaskOrderTasks.size() - 1; i > 0; i--) {
+                standardTestTaskOrderTasks[0 .. i - 1].each {
+                    standardTestTaskOrderTasks[i].mustRunAfter(it)
                 }
             }
-        }
 
-        List<String> availableTestSetNames = getAvailableTestSetNames()
-        project.tasks.named("check").configure {Task task ->
-            extension.commitStageTestTaskNames.each {
-                if (availableTestSetNames.contains(it)) {
-                    task.dependsOn(it)
+            List<String> availableTestSetNames = getAvailableTestSetNames()
+            project.tasks.named("check").configure { Task task ->
+                extension.commitStageTestTaskNames.each {
+                    if (availableTestSetNames.contains(it)) {
+                        task.dependsOn(it)
+                    }
                 }
             }
         }

@@ -9,8 +9,8 @@ class DynamicTestSetsPluginSpec extends Specification implements ProjectSupport 
         project.plugins.apply(DynamicTestSetsPlugin.class)
     }
 
-    private void createSrcDirs(String ... names) {
-        names.each {String name ->
+    private void createSrcDirs(String... names) {
+        names.each { String name ->
             projectFile("src/${name}").mkdirs()
         }
     }
@@ -22,7 +22,7 @@ class DynamicTestSetsPluginSpec extends Specification implements ProjectSupport 
 
         when:
         evaluateProject()
-        
+
         then:
         projectValidator.assertTaskDependency("check", "componentTest")
         projectValidator.assertNoTaskDependency("check", "integrationTest")
@@ -33,8 +33,9 @@ class DynamicTestSetsPluginSpec extends Specification implements ProjectSupport 
         createSrcDirs("componentTest", "integrationTest", "functionalTest")
         applyPlugin()
 
+        and:
         project.extensions.findByType(DynamicTestSetsExtension).commitStageTestTaskNames = ["integrationTest", "functionalTest"]
-        
+
         when:
         evaluateProject()
 
@@ -42,6 +43,24 @@ class DynamicTestSetsPluginSpec extends Specification implements ProjectSupport 
         projectValidator.assertNoTaskDependency("check", "componentTest")
         projectValidator.assertTaskDependency("check", "integrationTest")
         projectValidator.assertTaskDependency("check", "functionalTest")
+    }
+
+    def "should configure test order according to extension"() {
+        given:
+        createSrcDirs("componentTest", "intTest", "functionalTest")
+        applyPlugin()
+
+        and:
+        project.extensions.findByType(DynamicTestSetsExtension).standardTestTaskOrder = ["test", "functionalTest", "intTest"]
+
+        when:
+        evaluateProject()
+
+        then:
+        projectValidator.assertTaskMustRunAfter("functionalTest", "test")
+        projectValidator.assertTaskMustRunAfter("intTest", "test")
+        projectValidator.assertTaskMustRunAfter("intTest", "functionalTest")
+        projectValidator.assertTaskMustRunAfterNotDefined("componentTest", "test")
     }
 
 }

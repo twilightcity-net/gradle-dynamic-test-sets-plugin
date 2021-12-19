@@ -2,6 +2,7 @@ package org.betterdevxp.gradle.testkit
 
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.internal.tasks.DefaultTaskDependency
 
 class ProjectValidator {
 
@@ -49,4 +50,27 @@ class ProjectValidator {
             assert !project.tasks.findByName(name)
         }
     }
+
+    void assertTaskMustRunAfter(String taskName, String expectedMustRunAfterName) {
+        assert getMustRunAfterTaskNames(taskName).contains(expectedMustRunAfterName)
+    }
+
+    void assertTaskMustRunAfterNotDefined(String taskName, String expectedMustRunAfterName) {
+        assert getMustRunAfterTaskNames(taskName).contains(expectedMustRunAfterName) == false
+    }
+
+    private List<String> getMustRunAfterTaskNames(String taskName) {
+        Task task = project.tasks.getByName(taskName)
+        List<String> mustRunAfterTaskNames = (task.getMustRunAfter() as DefaultTaskDependency).getMutableValues().collect {
+            if (it instanceof String) {
+                return it
+            } else if (it instanceof Task) {
+                return it.name
+            } else {
+                throw new IllegalStateException("Unknown value=${it} of type=${it.class}")
+            }
+        }
+        mustRunAfterTaskNames
+    }
+
 }
