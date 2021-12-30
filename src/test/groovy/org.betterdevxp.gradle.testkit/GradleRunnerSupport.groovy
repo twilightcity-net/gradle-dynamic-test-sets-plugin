@@ -2,29 +2,38 @@ package org.betterdevxp.gradle.testkit
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Before
 
 trait GradleRunnerSupport extends ProjectFileSystem {
 
-    GradleRunner runner
+    private GradleRunner runner
 
-    @Before
-    def setupGradleRunner() {
-        projectDir.deleteDir()
-        projectDir.mkdirs()
-        new File(projectDir, "settings.gradle").text = ""
-        runner = GradleRunner.create()
-                .forwardOutput()
-                .withPluginClasspath()
-                .withProjectDir(projectDir)
+    GradleRunner getRunner() {
+        if (runner == null) {
+            TestFile settingsFile = getSettingsFile()
+            if (settingsFile.exists() == false) {
+                settingsFile.text = ""
+            }
+            runner = GradleRunner.create()
+                    .forwardOutput()
+                    .withPluginClasspath()
+                    .withProjectDir(projectDir)
+        }
+        runner
+    }
+
+    private GradleRunner runnerWithArgumentsIncludingStackTrace(String... args) {
+        if ((args as List).contains("-s") == false) {
+            args = args + "-s"
+        }
+        getRunner().withArguments(args)
     }
 
     BuildResult run(String... args) {
-        runner.withArguments(args).build()
+        runnerWithArgumentsIncludingStackTrace(args).build()
     }
 
     BuildResult runAndFail(String ... args) {
-        runner.withArguments(args).buildAndFail()
+        runnerWithArgumentsIncludingStackTrace(args).buildAndFail()
     }
 
 }
