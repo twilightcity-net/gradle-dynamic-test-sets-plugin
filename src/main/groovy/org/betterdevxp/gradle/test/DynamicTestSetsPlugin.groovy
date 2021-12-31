@@ -5,7 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.api.tasks.testing.Test
+import org.unbrokendome.gradle.plugins.testsets.TestSetsPlugin
 
 class DynamicTestSetsPlugin implements Plugin<Project> {
 
@@ -17,7 +17,7 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
         this.project = project
         this.extension = project.extensions.create(DynamicTestSetsExtension.NAME, DynamicTestSetsExtension)
 
-        project.apply(plugin: "org.unbroken-dome.test-sets")
+        project.pluginManager.apply(TestSetsPlugin)
         configureDynamicTestSets()
         configureTestTaskOrderAndCommitStageDependencies()
     }
