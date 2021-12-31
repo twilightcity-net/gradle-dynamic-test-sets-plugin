@@ -28,14 +28,8 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
         availableTestSetNames.remove("sharedTest")
         configureSharedTestSetLibrary()
 
-        boolean definesMainTest = false
-        if (availableTestSetNames.remove("mainTest")) {
-            definesMainTest = true
-            configureMainTestSetLibrary()
-        }
-
         availableTestSetNames.each { String testSetName ->
-            configureTestSet(testSetName, definesMainTest)
+            configureTestSet(testSetName)
         }
     }
 
@@ -60,26 +54,10 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
         extendTestLibraryFromMainConfigurations("sharedTest")
     }
 
-    private void configureMainTestSetLibrary() {
-        project.testSets {
-            libraries {
-                mainTest
-            }
-            sharedTest {
-                imports libraries.mainTest
-            }
-        }
-        extendTestLibraryFromMainConfigurations("mainTest")
-    }
-
-    private void configureTestSet(String testSetName, boolean definesMainTest) {
+    private void configureTestSet(String testSetName) {
         project.testSets {
             "${testSetName}" {
-                if (definesMainTest) {
-                    imports libraries.sharedTest, libraries.mainTest
-                } else {
-                    imports libraries.sharedTest
-                }
+                imports libraries.sharedTest
             }
         }
     }

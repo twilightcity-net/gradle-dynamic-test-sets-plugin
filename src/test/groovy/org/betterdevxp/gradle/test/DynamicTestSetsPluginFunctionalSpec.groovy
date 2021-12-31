@@ -86,11 +86,11 @@ class SomeTest extends spock.lang.Specification {
         assert result.output.contains("expect this output")
     }
 
-    def "should make classes from main source set available to test sets"() {
+    def "should make classes from main source set available to shared test set"() {
         given:
         buildFile << """
         dependencies {
-            mainTestApi 'org.spockframework:spock-core:1.3-groovy-2.5'
+            sharedTestApi 'org.spockframework:spock-core:1.3-groovy-2.5'
         }
 """
 
@@ -99,14 +99,6 @@ class SomeTest extends spock.lang.Specification {
 public class Utils {
     public static void printLine(String line) {
         System.out.println(line);
-    } 
-}
-"""
-        and: "class defined in the 'mainTest' test set library"
-        projectFile("src/mainTest/groovy/MainTestUtils.groovy") << """
-class MainTestUtils {
-    static void printLine(String line) {
-        Utils.printLine(line)
     } 
 }
 """
@@ -124,7 +116,6 @@ class SomeTest extends spock.lang.Specification {
 
     def "some test"() {
         when:
-        MainTestUtils.printLine("main test output")
         SharedTestUtils.printLine("shared test output")
         Utils.printLine("main source set output")
         
@@ -137,7 +128,6 @@ class SomeTest extends spock.lang.Specification {
         BuildResult result = run("componentTest")
 
         then:
-        assert result.output.contains("main test output")
         assert result.output.contains("shared test output")
         assert result.output.contains("main source set output")
     }
@@ -171,11 +161,11 @@ apply plugin: "java-library"
 
 dependencies {
     api "com.google.guava:guava:26.0-jre"
-    mainTestApi 'org.spockframework:spock-core:1.3-groovy-2.5'
+    sharedTestApi 'org.spockframework:spock-core:1.3-groovy-2.5'
 }
 """
-        projectFile("src/mainTest/groovy/MainTestUtils.groovy") << """
-class MainTestUtils {
+        projectFile("src/sharedTest/groovy/SharedTestUtils.groovy") << """
+class SharedTestUtils {
     static void shouldCompile() {
         com.google.common.collect.ArrayListMultimap.create();
     } 
