@@ -1,13 +1,15 @@
 package org.betterdevxp.gradle.test
 
+import org.betterdevxp.gradle.api.SourceSetAccessor
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.tasks.SourceSet
 import org.unbrokendome.gradle.plugins.testsets.TestSetsPlugin
 
-class DynamicTestSetsPlugin implements Plugin<Project> {
+class DynamicTestSetsPlugin implements Plugin<Project>, SourceSetAccessor {
 
     private Project project
     private DynamicTestSetsExtension extension
@@ -20,6 +22,11 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
         project.pluginManager.apply(TestSetsPlugin)
         configureDynamicTestSets()
         configureTestTaskOrderAndCommitStageDependencies()
+    }
+
+    @Override
+    Project getProject() {
+        project
     }
 
     private List<String> configureDynamicTestSets() {
@@ -63,16 +70,23 @@ class DynamicTestSetsPlugin implements Plugin<Project> {
     }
 
     private void extendTestLibraryFromMainConfigurations(String name) {
+        SourceSet mainSourceSet = getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+        SourceSet libSourceSet = getSourceSets().getByName(name)
+
         project.plugins.withType(JavaPlugin) {
-            project.configurations."${name}Api".extendsFrom project.configurations.compile
-            project.configurations."${name}Implementation".extendsFrom project.configurations.runtime
-            project.configurations."${name}CompileOnly".extendsFrom project.configurations.compileOnly
-            project.configurations."${name}RuntimeOnly".extendsFrom project.configurations.runtimeOnly
+            project.configurations.with {
+                it[libSourceSet.apiConfigurationName].extendsFrom(it[mainSourceSet.compileClasspathConfigurationName])
+                it[libSourceSet.implementationConfigurationName].extendsFrom(it[mainSourceSet.implementationConfigurationName])
+                it[libSourceSet.compileOnlyConfigurationName].extendsFrom(it[mainSourceSet.compileOnlyConfigurationName])
+                it[libSourceSet.runtimeOnlyConfigurationName].extendsFrom(it[mainSourceSet.runtimeOnlyConfigurationName])
+            }
         }
 
         project.plugins.withType(JavaLibraryPlugin) {
-            project.configurations."${name}Api".extendsFrom project.configurations.api
-            project.configurations."${name}Implementation".extendsFrom project.configurations.implementation
+            project.configurations.with {
+                it[libSourceSet.apiConfigurationName].extendsFrom(it[mainSourceSet.apiConfigurationName])
+                it[libSourceSet.implementationConfigurationName].extendsFrom(it[mainSourceSet.implementationConfigurationName])
+            }
         }
     }
 
