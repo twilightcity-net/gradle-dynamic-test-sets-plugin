@@ -4,6 +4,7 @@ import org.betterdevxp.gradle.api.SourceSetAccessor
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.SourceSet
@@ -58,34 +59,29 @@ class DynamicTestSetsPlugin implements Plugin<Project>, SourceSetAccessor {
                 sharedTest
             }
         }
-        extendTestLibraryFromMainConfigurations("sharedTest")
+
+        SourceSet mainSourceSet = getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+        SourceSet libSourceSet = getSourceSets().getByName("sharedTest")
+
+        project.configurations.with {
+            it[libSourceSet.apiConfigurationName].extendsFrom(it[mainSourceSet.implementationConfigurationName])
+            it[libSourceSet.runtimeClasspathConfigurationName].extendsFrom(it[mainSourceSet.runtimeClasspathConfigurationName])
+        }
+        project.configurations.findByName(libSourceSet.apiConfigurationName).dependencies.add(
+                project.dependencies.create(mainSourceSet.output)
+        )
+
+        project.plugins.withType(JavaLibraryPlugin) {
+            project.configurations.with {
+                it[libSourceSet.apiConfigurationName].extendsFrom(it[mainSourceSet.apiConfigurationName])
+            }
+        }
     }
 
     private void configureTestSet(String testSetName) {
         project.testSets {
             "${testSetName}" {
                 imports libraries.sharedTest
-            }
-        }
-    }
-
-    private void extendTestLibraryFromMainConfigurations(String name) {
-        SourceSet mainSourceSet = getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-        SourceSet libSourceSet = getSourceSets().getByName(name)
-
-        project.plugins.withType(JavaPlugin) {
-            project.configurations.with {
-                it[libSourceSet.apiConfigurationName].extendsFrom(it[mainSourceSet.compileClasspathConfigurationName])
-                it[libSourceSet.implementationConfigurationName].extendsFrom(it[mainSourceSet.implementationConfigurationName])
-                it[libSourceSet.compileOnlyConfigurationName].extendsFrom(it[mainSourceSet.compileOnlyConfigurationName])
-                it[libSourceSet.runtimeOnlyConfigurationName].extendsFrom(it[mainSourceSet.runtimeOnlyConfigurationName])
-            }
-        }
-
-        project.plugins.withType(JavaLibraryPlugin) {
-            project.configurations.with {
-                it[libSourceSet.apiConfigurationName].extendsFrom(it[mainSourceSet.apiConfigurationName])
-                it[libSourceSet.implementationConfigurationName].extendsFrom(it[mainSourceSet.implementationConfigurationName])
             }
         }
     }
