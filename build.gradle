@@ -3,12 +3,15 @@ plugins {
     id "java-gradle-plugin"
     id "idea"
     id 'maven-publish'
-    id "com.gradle.plugin-publish" version "0.16.0"
 }
 
 repositories {
     mavenCentral()
     gradlePluginPortal()
+}
+
+java {
+    withSourcesJar()
 }
 
 dependencies {
@@ -21,20 +24,25 @@ String pluginDescription = "Opinionated, convention over configuration test plug
         "for the heavy lifting, this plugin inspects the source trees of a project and automatically configures " +
         "gradle-testsets-plugin based on directory naming conventions."
 
-pluginBundle {
-    website = "https://github.com/betterdevxp/gradle-dynamic-test-sets-plugin"
-    vcsUrl = "https://github.com/betterdevxp/gradle-dynamic-test-sets-plugin.git"
-    tags = ["gradle", "testing", "testsets", "test sets", "component test", "integration test", "functional test"]
-    description = pluginDescription
-}
-
 gradlePlugin {
     plugins {
         dynamicTestSets {
-            id = "org.betterdevxp.dynamic-test-sets"
+            id = "net.twilightcity.dynamic-test-sets"
             displayName = "Dynamic TestSets"
             description = pluginDescription
             implementationClass = "org.betterdevxp.gradle.test.DynamicTestSetsPlugin"
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            url "${findProperty('nexus.url')}/repository/twilightcity"
+            credentials {
+                username findProperty('nexus.username')
+                password findProperty('nexus.password')
+            }
         }
     }
 }

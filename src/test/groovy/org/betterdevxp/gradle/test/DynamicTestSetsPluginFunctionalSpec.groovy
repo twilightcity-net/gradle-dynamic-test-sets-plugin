@@ -10,7 +10,7 @@ class DynamicTestSetsPluginFunctionalSpec extends Specification implements Gradl
         buildFile << """
 plugins {
     id 'groovy'
-    id 'org.betterdevxp.dynamic-test-sets'
+    id 'net.twilightcity.dynamic-test-sets'
 }
 
 repositories {
