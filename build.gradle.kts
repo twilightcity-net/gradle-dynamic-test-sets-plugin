@@ -45,8 +45,6 @@ publishing {
     repositories {
         maven {
             credentials(org.gradle.api.credentials.PasswordCredentials::class)
-            url = uri("http://nexus.twilightcity.net:8081/repository/public")
-            isAllowInsecureProtocol = true
         }
     }
 }
