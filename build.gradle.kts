@@ -4,6 +4,7 @@ plugins {
     id("idea")
     id("maven-publish")
     id("com.gradle.plugin-publish") version "0.16.0"
+    id("signing")
     kotlin("jvm")
 }
 
@@ -43,15 +44,15 @@ gradlePlugin {
 publishing {
     repositories {
         maven {
-            url = uri("http://nexus.twilightcity.net:8081/repository/public")
-            isAllowInsecureProtocol = true
-            credentials {
-                username = "ci"
-                password = findProperty ("nexus.password") as String?
-            }
+            credentials(org.gradle.api.credentials.PasswordCredentials::class)
         }
     }
 }
+
+signing {
+    sign(publishing.publications)
+}
+
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
