@@ -44,6 +44,7 @@ publishing {
     repositories {
         maven {
             url = uri("http://nexus.twilightcity.net:8081/repository/public")
+            isAllowInsecureProtocol = true
             credentials {
                 username = "ci"
                 password = findProperty ("nexus.password") as String?
